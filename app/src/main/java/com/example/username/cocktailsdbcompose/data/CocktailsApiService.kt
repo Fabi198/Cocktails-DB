@@ -5,6 +5,7 @@ import com.example.username.cocktailsdbcompose.data.response.CocktailsDTO
 import com.example.username.cocktailsdbcompose.data.response.CocktailsSimpleDTO
 import com.example.username.cocktailsdbcompose.data.response.GlassesDTO
 import com.example.username.cocktailsdbcompose.data.response.IngredientsDTO
+import com.example.username.cocktailsdbcompose.data.response.KindsDTO
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -43,5 +44,8 @@ interface CocktailsApiService {
 
     @GET("list.php?g=list")
     suspend fun getGlassesList(): Response<GlassesDTO>
+
+    @GET("list.php?a=list")
+    suspend fun getKindsList(): Response<KindsDTO>
 
 }

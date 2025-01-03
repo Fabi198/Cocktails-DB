@@ -6,5 +6,6 @@ interface PreferenceMethods {
 
     suspend fun saveLanguage(key: String, value: String)
     suspend fun getLanguage(): Flow<String>
+    suspend fun saveAuthenticationState(isAuthenticate: Boolean)
 
 }

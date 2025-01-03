@@ -14,20 +14,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +49,6 @@ import com.example.username.cocktailsdbcompose.presentation.backgrounds.SubBack
 import com.example.username.cocktailsdbcompose.presentation.viewModel.CocktailScreenViewModel
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CocktailScreen(navController: NavController, viewModel: CocktailScreenViewModel = hiltViewModel(), idDrink: String?, random: Boolean?) {
     LaunchedEffect(key1 = idDrink, key2 = random) {
@@ -159,16 +155,16 @@ fun CocktailScreen(navController: NavController, viewModel: CocktailScreenViewMo
                             .border(1.dp, colorResource(R.color.white), RoundedCornerShape(8.dp)),
                     ) {
                         when (languageInstructions) {
-                            "english" -> cocktail[0].strInstructionsEN
-                            "spanish" -> cocktail[0].strInstructionsES
-                            "german" -> cocktail[0].strInstructionsDE
-                            "french" -> cocktail[0].strInstructionsFR
-                            "italian" -> cocktail[0].strInstructionsIT
+                            "english" -> if(cocktail[0].strInstructionsEN != null) cocktail[0].strInstructionsEN else cocktail[0].strInstructionsEN
+                            "spanish" -> if(cocktail[0].strInstructionsES != null) cocktail[0].strInstructionsES else cocktail[0].strInstructionsEN
+                            "german" -> if(cocktail[0].strInstructionsDE != null) cocktail[0].strInstructionsDE else cocktail[0].strInstructionsEN
+                            "french" -> if(cocktail[0].strInstructionsFR != null) cocktail[0].strInstructionsFR else cocktail[0].strInstructionsEN
+                            "italian" -> if(cocktail[0].strInstructionsIT != null) cocktail[0].strInstructionsIT else cocktail[0].strInstructionsEN
                             else -> cocktail[0].strInstructionsEN
                         }?.let {
                             Text(
                                 modifier = Modifier.padding(8.dp),
-                                text = it.ifEmpty { cocktail[0].strInstructionsEN.toString() },
+                                text = it,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 10.sp,
                                 lineHeight = 1.2.em,

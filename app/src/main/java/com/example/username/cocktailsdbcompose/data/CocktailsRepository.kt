@@ -5,6 +5,7 @@ import com.example.username.cocktailsdbcompose.data.response.CocktailsDTO
 import com.example.username.cocktailsdbcompose.data.response.CocktailsSimpleDTO
 import com.example.username.cocktailsdbcompose.data.response.GlassesDTO
 import com.example.username.cocktailsdbcompose.data.response.IngredientsDTO
+import com.example.username.cocktailsdbcompose.data.response.KindsDTO
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -54,6 +55,10 @@ class CocktailsRepository @Inject constructor(
 
     suspend fun getGlassesList(): Response<GlassesDTO> {
         return cocktailsApiService.getGlassesList()
+    }
+
+    suspend fun getKindsList(): Response<KindsDTO> {
+        return cocktailsApiService.getKindsList()
     }
 
 }

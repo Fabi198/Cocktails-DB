@@ -1,5 +1,6 @@
 package com.example.username.cocktailsdbcompose.presentation.drawerMenu
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,18 +13,23 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,13 +38,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -48,29 +58,36 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.credentials.Credential
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.username.cocktailsdbcompose.BuildConfig
 import com.example.username.cocktailsdbcompose.R
 import com.example.username.cocktailsdbcompose.navigation.AppScreens
-import com.example.username.cocktailsdbcompose.presentation.viewModel.CocktailScreenViewModel
 import com.example.username.cocktailsdbcompose.presentation.viewModel.DrawerMenuViewModel
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hiltViewModel(), navController: NavHostController, scope: CoroutineScope) {
+fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hiltViewModel(), navController: NavHostController, scope: CoroutineScope) {
     val showFastPreferences by viewModel.showFastPreferences.collectAsState()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
     val languageList by viewModel.languageList.collectAsState()
     val savedLanguage by viewModel.savedLanguage.collectAsState()
+    val authState by viewModel.authState.collectAsState(initial = false)
+
     ConstraintLayout (
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.onSecondaryContainer)
             .fillMaxSize()
     ) {
-        val (title, divider, glassSection, catSection, letterSection, resetFavorites, instructionsLanguage, divider2, googleBtn, preferencesBtn) = createRefs()
+        val (title, divider, glassSection, kindSection, catSection, letterSection, myAccountSection, resetFavorites, instructionsLanguage, divider2, googleBtn, preferencesBtn) = createRefs()
         Text(
             modifier = Modifier
                 .fillMaxWidth()
@@ -104,7 +121,8 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                     end.linkTo(parent.end)
                 },
                 title = "Buscar por vaso",
-                drawerState = drawerState
+                drawerState = drawerState,
+                viewModel = viewModel
             ) {
                 val stateGlassesDrawer by viewModel.stateGlassesDrawer.collectAsState()
                 LazyColumn {
@@ -117,13 +135,34 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                 }
             }
             ExpandableSection(
-                modifier = Modifier.constrainAs(catSection) {
+                modifier = Modifier.constrainAs(kindSection) {
                     top.linkTo(glassSection.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 },
+                title = "Buscar por tipo",
+                drawerState = drawerState,
+                viewModel = viewModel
+            ) {
+                val stateKindsDrawer by viewModel.stateKindsDrawer.collectAsState()
+                LazyColumn {
+                    items(stateKindsDrawer) {
+                        SubItemRow(it.strAlcoholic) {
+                            scope.launch { drawerState?.close() }
+                            navController.navigate(AppScreens.SearchScreen.route + "/${it.strAlcoholic.replace(" ", "_")}" + "/2")
+                        }
+                    }
+                }
+            }
+            ExpandableSection(
+                modifier = Modifier.constrainAs(catSection) {
+                    top.linkTo(kindSection.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
                 title = "Buscar por categoria",
-                drawerState = drawerState
+                drawerState = drawerState,
+                viewModel = viewModel
             ) {
                 val stateCategoriesDrawer by viewModel.stateCategoriesDrawer.collectAsState()
                 LazyColumn {
@@ -147,7 +186,8 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                     end.linkTo(parent.end)
                 },
                 title = "Buscar por letra",
-                drawerState = drawerState
+                drawerState = drawerState,
+                viewModel = viewModel
             ) {
                 val upperCaseAlphabet: List<Char> = listOf('A', 'B', 'C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z')
                 LazyRow(
@@ -171,8 +211,33 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                     }
                 }
             }
+            if (authState) {
+                ExpandableSection(
+                    modifier = Modifier.constrainAs(myAccountSection) {
+                        top.linkTo(letterSection.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    },
+                    title = "Mi Cuenta",
+                    drawerState = drawerState,
+                    viewModel = viewModel
+                ) {
+                    LazyColumn {
+                        item {
+                            SubItemRow("Mis Cocteles") {
+                                scope.launch { drawerState?.close() }
+
+                            }
+                            SubItemRow("Historial") {
+                                scope.launch { drawerState?.close() }
+
+                            }
+                        }
+                    }
+                }
+            }
         } else {
-            if (isLoggedIn) {
+            if (authState) {
                 val (text, icon) = createRefs()
                 ConstraintLayout (
                     modifier = Modifier
@@ -220,7 +285,7 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                 modifier = Modifier
                     .fillMaxWidth()
                     .constrainAs(instructionsLanguage) {
-                        if (isLoggedIn) {
+                        if (authState) {
                             top.linkTo(resetFavorites.bottom)
                         } else {
                             top.linkTo(divider.bottom)
@@ -236,7 +301,8 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                         start.linkTo(parent.start)
                     },
                     title = "Idioma de instrucciones",
-                    drawerState = drawerState
+                    drawerState = drawerState,
+                    viewModel = viewModel
                 ) {
                     LazyColumn {
                         items(languageList) {
@@ -266,7 +332,6 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                 }
 
             }
-
         }
         HorizontalDivider(
             modifier = Modifier
@@ -277,46 +342,21 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                     end.linkTo(parent.end)
                 }
         )
-        Button(
-            modifier = Modifier
-                .constrainAs(googleBtn) {
+        AuthenticationButton(modifier = Modifier
+            .constrainAs(googleBtn) {
                 bottom.linkTo(preferencesBtn.top)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             }
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .background(Brush.verticalGradient(colors = listOf(colorResource(R.color.graySuperDark), colorResource(R.color.grayDark)), 0.0f, 100.0f), RoundedCornerShape(12.dp))
-                .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent
-            ),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 4.dp),
-            onClick = {
-                // if(user!=null) {} else {}
-            }
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(R.drawable.google_icon),
-                    contentDescription = null
-                )
-                Text(
-                    modifier = Modifier.padding(start = 8.dp),
-                    text = "Acceder con Google",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold, FontWeight.Normal)),
-                    textAlign = TextAlign.Center,
-                    color = Color.White
-                )
-            }
-        }
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .background(Brush.verticalGradient(colors = listOf(colorResource(R.color.graySuperDark), colorResource(R.color.grayDark)), 0.0f, 100.0f), RoundedCornerShape(12.dp))
+            .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp)),
+            authState = authState, onGetCredentialResponse = { credential ->
+                viewModel.onSignInWithGoogle(credential)
+            }, onCloseSession = {
+                viewModel.signOut()
+            })
         Button (
             modifier = Modifier
                 .constrainAs(preferencesBtn) {
@@ -356,6 +396,161 @@ fun DrawerContent(modifier: Modifier = Modifier, drawerState: DrawerState?, view
                     textAlign = TextAlign.Center,
                     color = Color.White
                 )
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AuthenticationButton(modifier: Modifier, authState: Boolean, onGetCredentialResponse: (Credential) -> Unit, onCloseSession: () -> Unit) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = CredentialManager.create(context)
+    val areClosingSession = rememberSaveable { mutableStateOf(false) }
+
+    Button(
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent
+        ),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 4.dp),
+        onClick = {
+            if (!authState) {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(BuildConfig.WEB_CLIENT_ID)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                coroutineScope.launch {
+                    try {
+                        val result = credentialManager.getCredential(request = request, context = context)
+                        onGetCredentialResponse(result.credential)
+                    } catch (e: Exception) {
+                        Log.i("rtef", e.message.toString())
+                    }
+                }
+            } else {
+                areClosingSession.value = true
+            }
+        }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Image(
+                modifier = Modifier.size(16.dp),
+                painter = painterResource(R.drawable.google_icon),
+                contentDescription = null
+            )
+            Text(
+                modifier = Modifier.padding(start = 8.dp),
+                text = if (!authState) "Acceder con Google" else "Cerrar sesión",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily(Font(R.font.montserrat_semi_bold, FontWeight.Normal)),
+                textAlign = TextAlign.Center,
+                color = Color.White
+            )
+        }
+    }
+
+    if (areClosingSession.value) {
+        BasicAlertDialog(
+            onDismissRequest = {
+                areClosingSession.value = false
+            }
+        ) {
+            ConstraintLayout (modifier = Modifier
+                .size(height = 100.dp, width = 50.dp)
+                .background(colorResource(R.color.graySuperDark), RoundedCornerShape(12.dp))
+                .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
+            ) {
+                val (title, yes, no) = createRefs()
+
+                Text(
+                    modifier = Modifier.constrainAs(title) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+                        .padding(top = 10.dp),
+                    text = "¿Desea cerrar sesión?",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    maxLines = 5,
+                    textAlign = TextAlign.Center,
+                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Button(
+                    onClick = {
+                        onCloseSession()
+                        areClosingSession.value = false
+                    },
+                    modifier = Modifier.constrainAs(yes) {
+                        top.linkTo(title.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(no.start)
+                        bottom.linkTo(parent.bottom)
+                    }
+                        .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
+                        .width(90.dp)
+                        .height(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.Transparent,
+                        containerColor = Color.Transparent
+                    )
+
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Sí",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        areClosingSession.value = false
+                    },
+                    modifier = Modifier.constrainAs(no) {
+                        top.linkTo(title.bottom)
+                        start.linkTo(yes.end)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom)
+                    }
+                        .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
+                        .width(90.dp)
+                        .height(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.Transparent,
+                        containerColor = Color.Transparent
+                    )
+
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "No",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -493,6 +688,7 @@ fun ExpandableSection(
     modifier: Modifier = Modifier,
     title: String,
     drawerState: DrawerState?,
+    viewModel: DrawerMenuViewModel,
     content: @Composable () -> Unit
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
@@ -503,7 +699,7 @@ fun ExpandableSection(
             .background(color = MaterialTheme.colorScheme.onSecondaryContainer)
             .fillMaxWidth()
     ) {
-        ExpandableSectionTitle(isExpanded = isExpanded, title = title)
+        ExpandableSectionTitle(isExpanded = isExpanded, title = title, viewModel = viewModel)
 
         AnimatedVisibility(
             modifier = Modifier
@@ -517,7 +713,7 @@ fun ExpandableSection(
 }
 
 @Composable
-fun ExpandableSectionTitle(modifier: Modifier = Modifier, isExpanded: Boolean, title: String) {
+fun ExpandableSectionTitle(modifier: Modifier = Modifier, isExpanded: Boolean, title: String, viewModel: DrawerMenuViewModel) {
 
     val icon = if (isExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown
 
@@ -536,8 +732,19 @@ fun ExpandableSectionTitle(modifier: Modifier = Modifier, isExpanded: Boolean, t
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily(Font(R.font.montserrat_bold, FontWeight.Bold)),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Start,
             color = MaterialTheme.colorScheme.onPrimary
         )
+
+        if (title == "Mi Cuenta") {
+            AsyncImage(
+                modifier = Modifier.padding(horizontal = 10.dp).size(24.dp).clip(CircleShape),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(viewModel.getProfilePhoto())
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }
