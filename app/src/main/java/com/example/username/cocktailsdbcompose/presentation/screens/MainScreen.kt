@@ -69,6 +69,7 @@ fun MainScreen(navController: NavController, viewModel: MainScreenViewModel = hi
         var textErrorCocktail by rememberSaveable { mutableStateOf(false) }
         var textErrorIngredient by rememberSaveable { mutableStateOf(false) }
         val favoritesCocktails by viewModel.stateFavoritesCocktails.collectAsState()
+        val isLoadingFavorites by viewModel.isLoadingFavorites.collectAsState()
         fun validateCocktailText(text: String) { textErrorCocktail = text.contains("/") }
         fun validateIngredientText(text: String) { textErrorIngredient = text.contains("/") }
 
@@ -218,7 +219,7 @@ fun MainScreen(navController: NavController, viewModel: MainScreenViewModel = hi
                 fontWeight = FontWeight.Normal
             )
         }
-        if (favoritesCocktails.isNotEmpty()) {
+        if (!isLoadingFavorites) {
             Text(
                 modifier = Modifier.constrainAs(titleFavCocktails) {
                     top.linkTo(searchIngredient.bottom)

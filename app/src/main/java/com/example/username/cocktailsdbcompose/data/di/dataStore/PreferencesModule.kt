@@ -1,6 +1,8 @@
 package com.example.username.cocktailsdbcompose.data.di.dataStore
 
 import android.content.Context
+import com.example.username.cocktailsdbcompose.data.di.FirebaseAuthSingleton
+import com.example.username.cocktailsdbcompose.data.di.FirebaseDBSingleton
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,5 +16,5 @@ object PreferencesModule {
 
     @Singleton
     @Provides
-    fun providePreferences(@ApplicationContext app: Context): PreferenceMethods = Preferences(app)
+    fun providePreferences(@ApplicationContext app: Context, firebaseAuthSingleton: FirebaseAuthSingleton, firebaseDBSingleton: FirebaseDBSingleton): PreferenceMethods = Preferences(app, firebaseAuthSingleton, firebaseDBSingleton)
 }

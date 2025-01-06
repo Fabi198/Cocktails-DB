@@ -6,10 +6,20 @@ import androidx.credentials.CustomCredential
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.username.cocktailsdbcompose.data.CocktailsRepository
+import com.example.username.cocktailsdbcompose.data.di.DBNames.FAVORITES_COCKTAILS
+import com.example.username.cocktailsdbcompose.data.di.DBNames.RECENT_COCKTAILS
+import com.example.username.cocktailsdbcompose.data.di.DBNames.SAVED_COCKTAILS
+import com.example.username.cocktailsdbcompose.data.di.DBNames.USERS
 import com.example.username.cocktailsdbcompose.data.di.FirebaseAuthSingleton
+import com.example.username.cocktailsdbcompose.data.di.FirebaseDBSingleton
 import com.example.username.cocktailsdbcompose.data.di.dataStore.Preferences
+import com.example.username.cocktailsdbcompose.data.di.usedCase.favorites.ResetFavoritesCocktails
+import com.example.username.cocktailsdbcompose.data.di.usedCase.favorites.SaveFavoritesCocktails
 import com.example.username.cocktailsdbcompose.data.di.usedCase.language.SaveLanguage
+import com.example.username.cocktailsdbcompose.data.di.usedCase.recents.CreateRecentCocktails
+import com.example.username.cocktailsdbcompose.data.di.usedCase.saved.CreateSavedCocktails
 import com.example.username.cocktailsdbcompose.data.response.CategoryDTO
+import com.example.username.cocktailsdbcompose.data.response.CocktailSimpleDTO
 import com.example.username.cocktailsdbcompose.data.response.GlassDTO
 import com.example.username.cocktailsdbcompose.data.response.KindDTO
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -28,7 +38,12 @@ class DrawerMenuViewModel @Inject constructor(
     private val repo: CocktailsRepository,
     private val saveLanguage: SaveLanguage,
     private val preferences: Preferences,
-    private val firebaseAuth: FirebaseAuthSingleton
+    private val resetFavoritesCocktails: ResetFavoritesCocktails,
+    private val firebaseAuth: FirebaseAuthSingleton,
+    private val firebaseDB: FirebaseDBSingleton,
+    private val savedFavoritesCocktails: SaveFavoritesCocktails,
+    private val createSavedCocktails: CreateSavedCocktails,
+    private val createRecentCocktails: CreateRecentCocktails
 ): ViewModel() {
     private val _stateCategoriesDrawer = MutableStateFlow(emptyList<CategoryDTO>())
     val stateCategoriesDrawer: StateFlow<List<CategoryDTO>> get() = _stateCategoriesDrawer
@@ -48,6 +63,8 @@ class DrawerMenuViewModel @Inject constructor(
     val authState: Flow<Boolean> get() = _authState
     private val _areClosingSession = MutableStateFlow(false)
     val areClosingSession: StateFlow<Boolean> get() = _areClosingSession
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> get() = _errorMessage
 
 
     init {
@@ -102,6 +119,7 @@ class DrawerMenuViewModel @Inject constructor(
                     .addOnSuccessListener {
                         viewModelScope.launch {
                             preferences.saveAuthenticationState(true)
+                            checkAndCreateUserDocument(firebaseAuth.auth.currentUser?.email!!)
                         }
                     }
                     .addOnFailureListener {
@@ -127,5 +145,105 @@ class DrawerMenuViewModel @Inject constructor(
             firebaseAuth.auth.currentUser!!.photoUrl?.let { uriPhoto = it.toString() }
         }
         return uriPhoto
+    }
+
+    fun onClickResetFavoritesCocktails() {
+        viewModelScope.launch {
+            val ids = listOf("11000", "11001", "11002", "11003", "11004", "11005", "11006", "11007")
+            val cocktails = mutableListOf<CocktailSimpleDTO>()
+
+            Log.i("rtef", "AQUI")
+
+            ids.forEach { id ->
+                val cocktailsResponse = repo.getCocktailsList(id)
+                if (cocktailsResponse.isSuccessful) {
+                    val cocktailsBody = cocktailsResponse.body()
+                    if (cocktailsBody != null && cocktailsBody.cocktails.isNotEmpty()) {
+                        val cocktailSimple = CocktailSimpleDTO(
+                            idDrink = cocktailsBody.cocktails[0].idDrink,
+                            strDrink = cocktailsBody.cocktails[0].strDrink,
+                            strDrinkThumb = cocktailsBody.cocktails[0].strDrinkThumb
+                        )
+                        Log.i("rtef", cocktailSimple.toString())
+                        cocktails.add(cocktailSimple)
+                    }
+                } else {
+                    handlerError("Error en la respuesta del servidor 2: ${cocktailsResponse.message()}")
+                    return@launch
+                }
+            }
+            Log.i("rtef", cocktails.size.toString())
+            resetFavoritesCocktails.invoke(cocktails)
+        }
+    }
+
+    private fun handlerError(error: String) {
+        _errorMessage.value = error
+    }
+
+    private fun checkAndCreateUserDocument(email: String) {
+        viewModelScope.launch {
+            Log.i("rtef", email)
+            val userDocRef = firebaseDB.db.collection(USERS).document(email)
+
+            userDocRef.get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot.exists()) {
+                        Log.i("rteFirebase", "Document already exists")
+                        val userData = documentSnapshot.data
+                        if (userData != null) {
+                            viewModelScope.launch {
+                                val favoritesCocktails = userData[FAVORITES_COCKTAILS] as? List<*> ?: emptyList<String>()
+                                val cocktails = mutableListOf<CocktailSimpleDTO>()
+
+                                Log.i("rtef", "AQUI")
+
+                                favoritesCocktails.forEach { id ->
+                                    val cocktailsResponse = repo.getCocktailsList(id.toString())
+                                    if (cocktailsResponse.isSuccessful) {
+                                        val cocktailsBody = cocktailsResponse.body()
+                                        if (cocktailsBody != null && cocktailsBody.cocktails.isNotEmpty()) {
+                                            val cocktailSimple = CocktailSimpleDTO(
+                                                idDrink = cocktailsBody.cocktails[0].idDrink,
+                                                strDrink = cocktailsBody.cocktails[0].strDrink,
+                                                strDrinkThumb = cocktailsBody.cocktails[0].strDrinkThumb
+                                            )
+                                            Log.i("rtef", cocktailSimple.toString())
+                                            cocktails.add(cocktailSimple)
+                                        }
+                                    } else {
+                                        handlerError("Error en la respuesta del servidor 2: ${cocktailsResponse.message()}")
+                                        return@forEach
+                                    }
+                                }
+                                Log.i("rtef", cocktails.size.toString())
+                                savedFavoritesCocktails.invoke(cocktails)
+                            }
+                        }
+                    } else {
+                        val defaultFavorites = (0..7).associate { index ->
+                            index.toString() to "1100${index}"
+                        }
+                        viewModelScope.launch { createSavedCocktails.invoke(emptyList()) }
+                        viewModelScope.launch { createRecentCocktails.invoke(emptyList()) }
+                        val userData = mapOf(
+                            RECENT_COCKTAILS to emptyList<String>(),
+                            SAVED_COCKTAILS to emptyList<String>(),
+                            FAVORITES_COCKTAILS to defaultFavorites
+                        )
+
+                        userDocRef.set(userData)
+                            .addOnSuccessListener {
+                                Log.i("rteFirebase", "Document created with default favorites")
+                            }
+                            .addOnFailureListener { error ->
+                                Log.i("rteFirebase", "Failed to create document: ${error.message}")
+                            }
+                    }
+                }
+                .addOnFailureListener { error ->
+                    Log.i("rteFirebase", "Failed to fetch document: ${error.message}")
+                }
+        }
     }
 }

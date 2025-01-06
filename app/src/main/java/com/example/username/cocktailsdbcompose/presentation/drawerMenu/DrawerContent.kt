@@ -70,6 +70,7 @@ import coil.request.ImageRequest
 import com.example.username.cocktailsdbcompose.BuildConfig
 import com.example.username.cocktailsdbcompose.R
 import com.example.username.cocktailsdbcompose.navigation.AppScreens
+import com.example.username.cocktailsdbcompose.presentation.dialogs.SimpleYNDialog
 import com.example.username.cocktailsdbcompose.presentation.viewModel.DrawerMenuViewModel
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import kotlinx.coroutines.CoroutineScope
@@ -81,6 +82,7 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
     val languageList by viewModel.languageList.collectAsState()
     val savedLanguage by viewModel.savedLanguage.collectAsState()
     val authState by viewModel.authState.collectAsState(initial = false)
+    val areResetFavoritesCocktails = rememberSaveable { mutableStateOf(false) }
 
     ConstraintLayout (
         modifier = Modifier
@@ -248,7 +250,7 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
                         end.linkTo(parent.end)
                     }
                         .clickable {
-                            // Logica para resetear favoritos
+                            areResetFavoritesCocktails.value = true
                         }
                 ) {
                     Text(
@@ -399,6 +401,28 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
             }
         }
     }
+
+    if (areResetFavoritesCocktails.value) {
+        SimpleYNDialog(
+            title = "¿Desea resetear los favoritos?",
+            btnYesText = "Sí",
+            btnNoText = "No",
+            onDismiss = {
+                areResetFavoritesCocktails.value = false
+            },
+            onClickYes = {
+                viewModel.onClickResetFavoritesCocktails()
+                areResetFavoritesCocktails.value = false
+                scope.launch { drawerState?.close() }
+                navController.navigate(route = AppScreens.MainScreen.route) {
+                    popUpTo(AppScreens.MainScreen.route) { inclusive = true }
+                }
+            },
+            onClickNo = {
+                areResetFavoritesCocktails.value = false
+            }
+        )
+    }
 }
 
 
@@ -463,96 +487,21 @@ fun AuthenticationButton(modifier: Modifier, authState: Boolean, onGetCredential
     }
 
     if (areClosingSession.value) {
-        BasicAlertDialog(
-            onDismissRequest = {
+        SimpleYNDialog(
+            title = "¿Desea cerrar sesión?",
+            btnYesText = "Sí",
+            btnNoText = "No",
+            onDismiss = {
+                areClosingSession.value = false
+            },
+            onClickYes = {
+                onCloseSession()
+                areClosingSession.value = false
+            },
+            onClickNo = {
                 areClosingSession.value = false
             }
-        ) {
-            ConstraintLayout (modifier = Modifier
-                .size(height = 100.dp, width = 50.dp)
-                .background(colorResource(R.color.graySuperDark), RoundedCornerShape(12.dp))
-                .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
-            ) {
-                val (title, yes, no) = createRefs()
-
-                Text(
-                    modifier = Modifier.constrainAs(title) {
-                        top.linkTo(parent.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    }
-                        .padding(top = 10.dp),
-                    text = "¿Desea cerrar sesión?",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    maxLines = 5,
-                    textAlign = TextAlign.Center,
-                    fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                    fontWeight = FontWeight.Bold
-                )
-
-                Button(
-                    onClick = {
-                        onCloseSession()
-                        areClosingSession.value = false
-                    },
-                    modifier = Modifier.constrainAs(yes) {
-                        top.linkTo(title.bottom)
-                        start.linkTo(parent.start)
-                        end.linkTo(no.start)
-                        bottom.linkTo(parent.bottom)
-                    }
-                        .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
-                        .width(90.dp)
-                        .height(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.Transparent,
-                        containerColor = Color.Transparent
-                    )
-
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Sí",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Button(
-                    onClick = {
-                        areClosingSession.value = false
-                    },
-                    modifier = Modifier.constrainAs(no) {
-                        top.linkTo(title.bottom)
-                        start.linkTo(yes.end)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom)
-                    }
-                        .border(1.dp, colorResource(R.color.orange), RoundedCornerShape(12.dp))
-                        .width(90.dp)
-                        .height(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.Transparent,
-                        containerColor = Color.Transparent
-                    )
-
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "No",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        fontFamily = FontFamily(Font(R.font.montserrat_semi_bold)),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
+        )
     }
 }
 
