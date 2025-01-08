@@ -1,11 +1,14 @@
 package com.example.username.cocktailsdbcompose.presentation.viewModel
 
 
+import android.content.Context
+import android.media.SoundPool
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.username.cocktailsdbcompose.R
 import com.example.username.cocktailsdbcompose.data.CocktailsRepository
 import com.example.username.cocktailsdbcompose.data.di.FirebaseDBSingleton
 import com.example.username.cocktailsdbcompose.data.di.dataStore.Preferences
@@ -19,6 +22,7 @@ import com.example.username.cocktailsdbcompose.data.response.CocktailDTO
 import com.example.username.cocktailsdbcompose.data.response.CocktailSimpleDTO
 import com.example.username.cocktailsdbcompose.data.response.IngredientSimpleDTO
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +32,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CocktailScreenViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repo: CocktailsRepository,
     private val preferences: Preferences,
     private val updateFavoritesCocktails: UpdateFavoritesCocktails,
@@ -65,10 +70,17 @@ class CocktailScreenViewModel @Inject constructor(
     private val _alreadySaved = MutableStateFlow(false)
     val alreadySaved: StateFlow<Boolean> get() = _alreadySaved
     private val _indexFavoriteSelected = MutableStateFlow(-1)
+    private val soundPool: SoundPool = SoundPool.Builder()
+        .setMaxStreams(5)
+        .build()
+
+    private val soundMap = mutableMapOf<String, Int>()
 
     init {
         viewModelScope.launch {
             _stateFavoritesCocktails.value = getFavoritesCocktails.invoke().first()
+            soundMap["savedfavCocktail"] = soundPool.load(context, R.raw.saved_cocktail, 1)
+            soundMap["unsavedfavCocktail"] = soundPool.load(context, R.raw.unsavedfav_cocktail, 1)
             Log.i("rtef", getSavedCocktails.invoke().first().toString())
         }
 
@@ -163,6 +175,7 @@ class CocktailScreenViewModel @Inject constructor(
             updateFavoritesCocktails.invoke(index, newSimpleCocktail, onSuccess = {
                 _resultUpdateFavoriteCocktail.value = "Success"
                 _indexFavoriteSelected.value = index
+                playSound("savedfavCocktail")
                 checkAlreadyOnFav()
             }, onError = { error ->
                 _resultUpdateFavoriteCocktail.value = error
@@ -187,6 +200,7 @@ class CocktailScreenViewModel @Inject constructor(
                                 strDrinkThumb = cocktails.cocktails[0].strDrinkThumb
                             )
                             updateFavoritesCocktails.invoke(index, simpleCocktail, onSuccess = {
+                                playSound("unsavedfavCocktail")
                                 checkAlreadyOnFav()
                             }, onError = { error ->
                                 _resultUpdateFavoriteCocktail.value = error
@@ -204,6 +218,7 @@ class CocktailScreenViewModel @Inject constructor(
         viewModelScope.launch {
             saveCocktail.invoke(_stateCocktail.value[0], onSuccess = {
                 _resultSaveCocktail.value = "Success"
+                playSound("savedfavCocktail")
                 checkAlreadySaved()
             }, onError = { error ->
                 _resultSaveCocktail.value = error
@@ -215,6 +230,7 @@ class CocktailScreenViewModel @Inject constructor(
         viewModelScope.launch {
             unSaveCocktail.invoke(_stateCocktail.value[0], onSuccess = {
                 _resultUnSaveCocktail.value = "Success"
+                playSound("unsavedfavCocktail")
                 checkAlreadySaved()
             }, onError = { error ->
                 _resultUnSaveCocktail.value = error
@@ -247,6 +263,17 @@ class CocktailScreenViewModel @Inject constructor(
 
     private fun findCocktailIndex(idDrink: String, favorites: List<CocktailSimpleDTO>): Int? {
         return favorites.indexOfFirst { it.idDrink == idDrink }.takeIf { it != -1 }
+    }
+
+    private fun playSound(soundKey: String) {
+        soundMap[soundKey]?.let { soundId ->
+            soundPool.play(soundId, 1f, 1f, 0, 0, 1f)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        soundPool.release()
     }
 }
 
