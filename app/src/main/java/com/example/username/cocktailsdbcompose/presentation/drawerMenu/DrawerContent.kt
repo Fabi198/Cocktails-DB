@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,7 +25,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -228,11 +225,11 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
                         item {
                             SubItemRow("Mis Cocteles") {
                                 scope.launch { drawerState?.close() }
-
+                                navController.navigate(AppScreens.SearchScreen.route + "/Guardados" + "/5")
                             }
                             SubItemRow("Historial") {
                                 scope.launch { drawerState?.close() }
-
+                                navController.navigate(AppScreens.SearchScreen.route + "/Recientes" + "/6")
                             }
                         }
                     }

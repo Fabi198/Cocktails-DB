@@ -16,6 +16,7 @@ interface RepositoryMethods {
     suspend fun createSavedCocktails(cocktails: List<CocktailDTO>)
     suspend fun saveCocktail(cocktail: CocktailDTO, onSuccess: () -> Unit, onError: (String) -> Unit)
     suspend fun getSavedCocktails(): Flow<List<CocktailDTO>>
+    suspend fun getSavedSimpleCocktails(): List<CocktailSimpleDTO>
     suspend fun unSavedCocktail(cocktail: CocktailDTO, onSuccess: () -> Unit, onError: (String) -> Unit)
     suspend fun createRecentCocktails(cocktails: List<CocktailSimpleDTO>)
     suspend fun addRecentCocktail(cocktail: CocktailSimpleDTO)

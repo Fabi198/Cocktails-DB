@@ -25,7 +25,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.single
 import javax.inject.Inject
 
 private const val PREFERENCES_NAME = "cocktailsPreferences"
@@ -218,6 +217,21 @@ class Preferences @Inject constructor(
                 Gson().fromJson(json, type)
             }
         }
+    }
+
+    override suspend fun getSavedSimpleCocktails(): List<CocktailSimpleDTO> {
+        val savedCocktails = getSavedCocktails().first()
+        val savedSimpleCocktails = mutableListOf<CocktailSimpleDTO>()
+        savedCocktails.forEach { cocktail ->
+            savedSimpleCocktails.add(
+                CocktailSimpleDTO(
+                idDrink = cocktail.idDrink,
+                strDrink = cocktail.strDrink,
+                strDrinkThumb = cocktail.strDrinkThumb
+            )
+            )
+        }
+        return savedSimpleCocktails
     }
 
     override suspend fun unSavedCocktail(cocktail: CocktailDTO, onSuccess: () -> Unit, onError: (String) -> Unit) {

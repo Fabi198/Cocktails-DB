@@ -7,6 +7,6 @@ class GetRecentCocktails @Inject constructor(
     private val repositoryMethods: RepositoryMethods
 ) {
 
-    suspend operator fun invoke() = repositoryMethods.getFavoritesCocktails()
+    suspend operator fun invoke() = repositoryMethods.getRecentCocktails()
 
 }

@@ -5,17 +5,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.username.cocktailsdbcompose.data.CocktailsRepository
+import com.example.username.cocktailsdbcompose.data.di.usedCase.recents.GetRecentCocktails
+import com.example.username.cocktailsdbcompose.data.di.usedCase.saved.GetSavedSimpleCocktails
 import com.example.username.cocktailsdbcompose.data.response.CocktailSimpleDTO
-import com.example.username.cocktailsdbcompose.data.response.CocktailsSimpleDTO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchScreenViewModel @Inject constructor(private val repo: CocktailsRepository): ViewModel() {
+class SearchScreenViewModel @Inject constructor(
+    private val repo: CocktailsRepository,
+    private val getRecentCocktails: GetRecentCocktails,
+    private val getSavedSimpleCocktails: GetSavedSimpleCocktails
+): ViewModel() {
     private val _stateCocktails = MutableStateFlow(emptyList<CocktailSimpleDTO>())
     val stateCocktails: StateFlow<List<CocktailSimpleDTO>> get() = _stateCocktails
     private val _isLoading = MutableLiveData<Boolean>()
@@ -24,34 +29,51 @@ class SearchScreenViewModel @Inject constructor(private val repo: CocktailsRepos
     val errorMessage: StateFlow<String> get() = _errorMessage
     private val _emptyList = MutableStateFlow(false)
     val emptyList: StateFlow<Boolean> get() = _emptyList
+    private val _savedCounter = MutableStateFlow("")
+    val savedCounter: StateFlow<String> get() = _savedCounter
 
     fun searchCocktails(toSearch: String, internalCode: Int) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val cocktailsResponse = when (internalCode) {
-                    0 -> { repo.getCocktailsByName(toSearch) }
-                    1 -> { repo.getCocktailsByGlass(toSearch) }
-                    2 -> { repo.getCocktailsByKind(toSearch) }
-                    3 -> { repo.getCocktailsByCategory(toSearch) }
-                    4 -> { repo.getCocktailsByFirstLetter(toSearch) }
-                    else -> { repo.getCocktailsByName(toSearch) }
-                }
-                if (cocktailsResponse.isSuccessful) {
-                    val body = cocktailsResponse.body()
-                    if (body != null) {
-                        if (body.cocktails.isNotEmpty()) {
-                            _stateCocktails.value = body.cocktails
+                if (internalCode in 0..4) {
+                    val cocktailsResponse = when (internalCode) {
+                        0 -> { repo.getCocktailsByName(toSearch) }
+                        1 -> { repo.getCocktailsByGlass(toSearch) }
+                        2 -> { repo.getCocktailsByKind(toSearch) }
+                        3 -> { repo.getCocktailsByCategory(toSearch) }
+                        4 -> { repo.getCocktailsByFirstLetter(toSearch) }
+                        else -> { repo.getCocktailsByName(toSearch) }
+                    }
+                    if (cocktailsResponse.isSuccessful) {
+                        val body = cocktailsResponse.body()
+                        if (body != null) {
+                            if (body.cocktails.isNotEmpty()) {
+                                _stateCocktails.value = body.cocktails
+                            } else {
+                                _emptyList.value = true
+                            }
                         } else {
-                            _emptyList.value = true
+                            handlerError("Error en la respuesta del servidor 2: ${cocktailsResponse.message()}")
                         }
                     } else {
-                        handlerError("Error en la respuesta del servidor 2: ${cocktailsResponse.message()}")
+                        handlerError("Error en la respuesta del servidor 1: ${cocktailsResponse.message()}")
+                        return@launch
                     }
+                } else if (internalCode == 5) {
+                    _stateCocktails.value = getSavedSimpleCocktails.invoke()
+                    if (_stateCocktails.value.isNotEmpty()) {
+                        _savedCounter.value = "${_stateCocktails.value.size}/20"
+                    }
+                } else if (internalCode == 6) {
+                    _stateCocktails.value = getRecentCocktails.invoke().first()
                 } else {
-                    handlerError("Error en la respuesta del servidor 1: ${cocktailsResponse.message()}")
-                    return@launch
+                    _errorMessage.value = "Error interno"
                 }
+
+
+
+
             } catch (e: Exception) {
                 handlerError("Error inesperado: $e")
                 return@launch

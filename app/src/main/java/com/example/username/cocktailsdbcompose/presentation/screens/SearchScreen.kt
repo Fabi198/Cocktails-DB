@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.username.cocktailsdbcompose.R
@@ -48,6 +49,7 @@ fun SearchScreen(navController: NavController, viewModel: SearchScreenViewModel 
     val isLoading: Boolean by viewModel.isLoading.observeAsState(initial = true)
     val emptyList by viewModel.emptyList.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val savedCounter by viewModel.savedCounter.collectAsState()
 
     SubBack()
     if (isLoading) {
@@ -55,40 +57,67 @@ fun SearchScreen(navController: NavController, viewModel: SearchScreenViewModel 
             CircularProgressIndicator(modifier = Modifier.size(40.dp), color = colorResource(R.color.orange))
         }
     } else {
-        Text(
-            modifier = Modifier
-                .padding(start = 50.dp, top = 50.dp)
-                .fillMaxWidth(0.4f),
-            color = colorResource(R.color.orange),
-            text = toSearch.toString().replace("_", " "),
-            fontSize = 16.sp,
-            maxLines = 1,
-            textAlign = TextAlign.Start,
-            fontFamily = FontFamily(Font(R.font.montserrat_italic)),
-            fontWeight = FontWeight.Bold
-        )
-        if (emptyList || errorMessage.isNotEmpty()) {
-            Toast.makeText(LocalContext.current, if (emptyList) "No hay resultados" else errorMessage, Toast.LENGTH_SHORT).show()
-            navController.navigate(route = AppScreens.MainScreen.route) {
-                popUpTo(AppScreens.MainScreen.route) { inclusive = true }
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
+        ConstraintLayout() {
+            val (title, savedCounterText, lazyGrid) = createRefs()
+
+            Text(
                 modifier = Modifier
-                    .padding(top = 100.dp)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(cocktails) { cocktail ->
-                    CocktailItem(cocktail.strDrinkThumb.toString(), cocktail.strDrink.toString()) {
-                        navController.navigate(route = AppScreens.CocktailScreen.route + "/${cocktail.idDrink}" + "/false")
+                    .constrainAs(title) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    }
+                    .padding(start = 50.dp, top = 50.dp)
+                    .fillMaxWidth(0.4f),
+                color = colorResource(R.color.orange),
+                text = toSearch.toString().replace("_", " "),
+                fontSize = 16.sp,
+                maxLines = 1,
+                textAlign = TextAlign.Start,
+                fontFamily = FontFamily(Font(R.font.montserrat_italic)),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                modifier = Modifier
+                    .constrainAs(savedCounterText) {
+                        top.linkTo(title.bottom)
+                        end.linkTo(parent.end)
+                    }
+                    .padding(end = 14.dp, top = 12.dp),
+                color = colorResource(R.color.white),
+                text = savedCounter,
+                fontSize = 18.sp,
+                maxLines = 1,
+                textAlign = TextAlign.Start,
+                fontFamily = FontFamily(Font(R.font.montserrat_bold_italic)),
+                fontWeight = FontWeight.Bold
+            )
+            if (emptyList || errorMessage.isNotEmpty()) {
+                Toast.makeText(LocalContext.current, if (emptyList) "No hay resultados" else errorMessage, Toast.LENGTH_SHORT).show()
+                navController.navigate(route = AppScreens.MainScreen.route) {
+                    popUpTo(AppScreens.MainScreen.route) { inclusive = true }
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier
+                        .constrainAs(lazyGrid) {
+                            top.linkTo(savedCounterText.bottom)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        }
+                        .padding(top = 4.dp)
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(cocktails) { cocktail ->
+                        CocktailItem(cocktail.strDrinkThumb.toString(), cocktail.strDrink.toString()) {
+                            navController.navigate(route = AppScreens.CocktailScreen.route + "/${cocktail.idDrink}" + "/false")
+                        }
                     }
                 }
             }
         }
-
     }
 }

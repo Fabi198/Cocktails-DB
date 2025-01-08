@@ -52,6 +52,10 @@ class Repository @Inject constructor(
         return preferencesMethods.getSavedCocktails()
     }
 
+    override suspend fun getSavedSimpleCocktails(): List<CocktailSimpleDTO> {
+        return preferencesMethods.getSavedSimpleCocktails()
+    }
+
     override suspend fun unSavedCocktail(cocktail: CocktailDTO, onSuccess: () -> Unit, onError: (String) -> Unit) {
         return preferencesMethods.unSavedCocktail(cocktail, onSuccess, onError)
     }
