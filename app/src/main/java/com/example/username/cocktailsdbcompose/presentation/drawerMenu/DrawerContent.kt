@@ -23,12 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,16 +88,17 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
             .background(color = MaterialTheme.colorScheme.onSecondaryContainer)
             .fillMaxSize()
     ) {
-        val (title, divider, glassSection, kindSection, catSection, letterSection, myAccountSection, resetFavorites, instructionsLanguage, divider2, googleBtn, preferencesBtn) = createRefs()
+        val (title, mainIcon, divider, glassSection, kindSection, catSection, letterSection, myAccountSection, resetFavorites, instructionsLanguage, divider2, googleBtn, preferencesBtn) = createRefs()
+        val guidelineTop = createGuidelineFromTop(24.dp)
         Text(
             modifier = Modifier
                 .fillMaxWidth()
                 .constrainAs(title) {
-                    top.linkTo(parent.top)
+                    top.linkTo(mainIcon.top)
+                    bottom.linkTo(mainIcon.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                }
-                .padding(top = 24.dp),
+                },
             text = if (!showFastPreferences) "Buscar por filtros" else "Ajustes Rápidos",
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily(Font(R.font.montserrat_bold, FontWeight.Bold)),
@@ -103,11 +106,29 @@ fun DrawerContent(drawerState: DrawerState?, viewModel: DrawerMenuViewModel = hi
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onPrimary
         )
+        IconButton(
+            onClick = {
+                scope.launch { drawerState?.close() }
+                navController.navigate(route = AppScreens.MainScreen.route) {
+                    popUpTo(AppScreens.MainScreen.route) { inclusive = true }
+                }
+            },
+            modifier = Modifier
+                .constrainAs(mainIcon) {
+                    top.linkTo(guidelineTop)
+                    start.linkTo(parent.start)
+                }
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Home,
+                contentDescription = "Go To Home"
+            )
+        }
         HorizontalDivider(
             modifier = Modifier
-                .padding(vertical = 16.dp)
+                .padding(bottom = 16.dp)
                 .constrainAs(divider) {
-                    top.linkTo(title.bottom)
+                    top.linkTo(mainIcon.bottom)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
