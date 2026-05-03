@@ -1,7 +1,7 @@
-<h1 align="center">
+<h2 align="center">
   <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp" width="40">
   CocktailsDB App
-</h1>
+</h2>
 
 Aplicación Android moderna desarrollada con **Jetpack Compose** que consume datos de cócteles desde una API y los presenta en una interfaz limpia, rápida y totalmente declarativa.
 
@@ -35,13 +35,13 @@ Aplicación Android moderna desarrollada con **Jetpack Compose** que consume dat
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/main_screen.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/cocktail_full_view.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/drawer_menu.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/ingredient_view.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/language_filter.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/list_by_filter.webp" width="250">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/save_favorite.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/main_screen.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/cocktail_full_view.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/drawer_menu.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/ingredient_view.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/language_filter.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/list_by_filter.webp" width="250">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/save_favorite.webp" width="250">
 </p>
 
 ---
