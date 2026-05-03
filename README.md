@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/assets/db_cocktails/logo_main.webp" width="40">
+  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp" width="40">
   CocktailsDB App
 </h1>
 
