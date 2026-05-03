@@ -81,8 +81,6 @@ La app consume datos de una API de cócteles, lo que permite acceder a:
 * ingredientes
 * imágenes
 
-Este tipo de APIs abiertas suelen proveer bases de datos completas de bebidas para aplicaciones y proyectos de práctica ([GitHub][1])
-
 ---
 
 ## 🎯 Objetivo del Proyecto
@@ -96,7 +94,7 @@ Este proyecto fue desarrollado para:
 
 ---
 
-## 🧪 Posibles mejoras
+## 🧪 Mejoras añadidas al proyecto original
 
 * ⭐ Favoritos
 * 🔐 Login / usuario
@@ -115,5 +113,3 @@ Este proyecto fue desarrollado para:
 ## 🧾 Licencia
 
 Proyecto de uso educativo / portfolio.
-
-[1]: https://github.com/carlagesa/CocktailDB?utm_source=chatgpt.com "GitHub - carlagesa/CocktailDB: 🍸 🍹🥂🍷🍸🍾🍹This API contains a collection of free, open source cocktail data. This project was created for entry level developers who need access to free API's."
