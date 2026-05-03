@@ -2,7 +2,7 @@
   <div style="display: inline-flex; align-items: center; gap: 10px;">
     <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp"
          width="40" />
-    <h3 style="margin: 0;">CocktailsDB App</h3>
+    <h1 style="margin: 0;">CocktailsDB App</h1>
   </div>
 </div>
 
