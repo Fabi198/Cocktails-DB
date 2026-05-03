@@ -1,9 +1,10 @@
-<h2 align="center">
-  <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp"
-       width="40"
-       style="transform: translateY(23px); margin-right: 8px;" />
-  CocktailsDB App
-</h2>
+<div align="center">
+  <div style="display: inline-flex; align-items: center; gap: 10px;">
+    <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp"
+         width="40" />
+    <h2 style="margin: 0;">CocktailsDB App</h2>
+  </div>
+</div>
 
 Aplicación Android moderna desarrollada con **Jetpack Compose** que consume datos de cócteles desde una API y los presenta en una interfaz limpia, rápida y totalmente declarativa.
 
