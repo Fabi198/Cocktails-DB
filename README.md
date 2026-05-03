@@ -1,7 +1,7 @@
 <h2 align="center">
   <img src="https://raw.githubusercontent.com/Fabi198/fabi198.github.io/main/assets/db_cocktails/logo_main.webp"
        width="40"
-       style="object-fit: cover; object-position: center;" />
+       style="transform: translateY(3px); margin-right: 8px;" />
   CocktailsDB App
 </h2>
 
