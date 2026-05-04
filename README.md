@@ -8,6 +8,8 @@
 
 Aplicación Android moderna desarrollada con **Jetpack Compose** que consume datos de cócteles desde una API y los presenta en una interfaz limpia, rápida y totalmente declarativa.
 
+Video Demo:
+
 [![Ver demo](https://img.youtube.com/vi/X3F38hSY9iE/maxresdefault.jpg)](https://youtube.com/shorts/X3F38hSY9iE)
 
 ---
